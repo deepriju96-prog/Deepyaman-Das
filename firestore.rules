@@ -1,0 +1,371 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: jobs
+    // Document ID: auto-generated
+    // Fields:
+    //   - clientCode: string (required, max 50 chars) - Unique code for the client.
+    //   - wordCount: number (required, positive) - Number of words in the assignment.
+    //   - rate: number (required, positive) - Rate per word or flat rate.
+    //   - deadline: string (required, ISO 8601) - Deadline for the job.
+    //   - notes: string (optional, max 1000 chars) - Additional notes for the job.
+    //   - status: string (required, enum: ["Todo", "In Progress", "Review", "Completed"]) - Current status.
+    //   - userId: string (required, matches auth.uid) - UID of the user who owns the job.
+    //   - createdAt: timestamp (required) - Timestamp when the job was created.
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "deepriju96@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function isValidEmail(email) {
+      return email is string &&
+        email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidDateString(dateStr) {
+      return dateStr is string &&
+        dateStr.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*Z?$");
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidJob(data) {
+      let requiredFields = ['clientCode', 'jobName', 'jobCode', 'wordCount', 'rate', 'deadline', 'status', 'userId', 'createdAt'];
+      let allowedFields = ['clientCode', 'jobName', 'jobCode', 'wordCount', 'rate', 'deadline', 'status', 'userId', 'createdAt', 'notes', 'useChecklist', 'checklist', 'assignedWriterId', 'assignedWriterName', 'assignedEditorId', 'assignedEditorName', 'assignedQCId', 'assignedQCName', 'startDate', 'internalDeadline', 'clientDeadline', 'revenue', 'writerCost', 'editorCost', 'qcCost', 'otherExpenses', 'revisionCount', 'completedAt'];
+      
+      return hasRequiredFields(requiredFields) &&
+             hasOnlyAllowedFields(allowedFields) &&
+             data.clientCode is string && data.clientCode.size() > 0 && data.clientCode.size() <= 50 &&
+             data.jobName is string && data.jobName.size() > 0 && data.jobName.size() <= 200 &&
+             data.jobCode is string && data.jobCode.size() > 0 && data.jobCode.size() <= 100 &&
+             (data.wordCount is int || data.wordCount is float) && data.wordCount >= 0 &&
+             (data.rate is int || data.rate is float) && data.rate >= 0 &&
+             isValidDateString(data.deadline) &&
+             data.status in ["Todo", "In Progress", "Review", "Completed"] &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.createdAt is timestamp &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() <= 1000)) &&
+             (!('useChecklist' in data) || data.useChecklist is bool) &&
+             (!('checklist' in data) || data.checklist is list) &&
+             (!('assignedWriterId' in data) || (data.assignedWriterId is string || data.assignedWriterId == null)) &&
+             (!('assignedWriterName' in data) || (data.assignedWriterName is string || data.assignedWriterName == null)) &&
+             (!('assignedEditorId' in data) || (data.assignedEditorId is string || data.assignedEditorId == null)) &&
+             (!('assignedEditorName' in data) || (data.assignedEditorName is string || data.assignedEditorName == null)) &&
+             (!('assignedQCId' in data) || (data.assignedQCId is string || data.assignedQCId == null)) &&
+             (!('assignedQCName' in data) || (data.assignedQCName is string || data.assignedQCName == null)) &&
+             (!('startDate' in data) || (data.startDate is string || data.startDate == null)) &&
+             (!('internalDeadline' in data) || (data.internalDeadline is string || data.internalDeadline == null)) &&
+             (!('clientDeadline' in data) || (data.clientDeadline is string || data.clientDeadline == null)) &&
+             (!('revenue' in data) || (data.revenue is int || data.revenue is float || data.revenue == null)) &&
+             (!('writerCost' in data) || (data.writerCost is int || data.writerCost is float || data.writerCost == null)) &&
+             (!('editorCost' in data) || (data.editorCost is int || data.editorCost is float || data.editorCost == null)) &&
+             (!('qcCost' in data) || (data.qcCost is int || data.qcCost is float || data.qcCost == null)) &&
+             (!('otherExpenses' in data) || (data.otherExpenses is int || data.otherExpenses is float || data.otherExpenses == null)) &&
+             (!('revisionCount' in data) || (data.revisionCount is int || data.revisionCount is float || data.revisionCount == null)) &&
+             (!('completedAt' in data) || (data.completedAt is string || data.completedAt == null));
+    }
+
+    function isValidClient(data) {
+      let requiredFields = ['clientName', 'clientCode', 'email', 'phone', 'country', 'userId', 'createdAt'];
+      let allowedFields = ['clientName', 'clientCode', 'email', 'phone', 'country', 'notes', 'userId', 'createdAt', 'updatedAt'];
+      
+      return hasRequiredFields(requiredFields) &&
+             hasOnlyAllowedFields(allowedFields) &&
+             data.clientName is string && data.clientName.size() > 0 && data.clientName.size() <= 200 &&
+             data.clientCode is string && data.clientCode.size() > 0 && data.clientCode.size() <= 50 &&
+             data.email is string && data.email.size() > 0 && data.email.size() <= 100 &&
+             data.phone is string && data.phone.size() > 0 && data.phone.size() <= 30 &&
+             data.country is string && data.country.size() > 0 && data.country.size() <= 100 &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.createdAt is timestamp &&
+             (!('updatedAt' in data) || data.updatedAt is timestamp) &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() <= 2000));
+    }
+
+    function isValidInvoice(data) {
+      let requiredFields = ['invoiceNumber', 'jobCode', 'client', 'amount', 'billingDate', 'dueDate', 'status', 'userId', 'createdAt'];
+      let allowedFields = ['invoiceNumber', 'jobCode', 'client', 'amount', 'billingDate', 'dueDate', 'status', 'userId', 'createdAt', 'updatedAt', 'companyName', 'billingMethod', 'quantity', 'rate', 'pages', 'unitLabel', 'taxPercentage', 'discountAmount', 'jobId'];
+      
+      return hasRequiredFields(requiredFields) &&
+             hasOnlyAllowedFields(allowedFields) &&
+             data.invoiceNumber is string && data.invoiceNumber.size() > 0 && data.invoiceNumber.size() <= 100 &&
+             data.jobCode is string && data.jobCode.size() > 0 && data.jobCode.size() <= 200 &&
+             data.client is string && data.client.size() > 0 && data.client.size() <= 200 &&
+             (data.amount is int || data.amount is float) && data.amount >= 0 &&
+             data.billingDate is string && data.billingDate.size() > 0 &&
+             data.dueDate is string && data.dueDate.size() > 0 &&
+             data.status in ["Draft", "Sent", "Paid", "Overdue", "Cancelled", "Pending"] &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.createdAt is timestamp &&
+             (!('companyName' in data) || (data.companyName is string && data.companyName.size() <= 200)) &&
+             (!('billingMethod' in data) || (data.billingMethod is string && data.billingMethod in ["manual", "qty_rate", "pages"])) &&
+             (!('quantity' in data) || (data.quantity is int || data.quantity is float)) &&
+             (!('rate' in data) || (data.rate is int || data.rate is float)) &&
+             (!('pages' in data) || (data.pages is int)) &&
+             (!('unitLabel' in data) || (data.unitLabel is string && data.unitLabel.size() <= 100)) &&
+             (!('taxPercentage' in data) || (data.taxPercentage is int || data.taxPercentage is float)) &&
+             (!('discountAmount' in data) || (data.discountAmount is int || data.discountAmount is float)) &&
+             (!('jobId' in data) || (data.jobId is string && data.jobId.size() <= 100));
+    }
+
+    function isValidNotification(data) {
+      let requiredFields = ['title', 'message', 'read', 'userId', 'createdAt', 'type'];
+      let allowedFields = ['title', 'message', 'read', 'userId', 'createdAt', 'type', 'referenceId', 'referenceType'];
+      
+      return hasRequiredFields(requiredFields) &&
+             hasOnlyAllowedFields(allowedFields) &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             data.message is string && data.message.size() > 0 && data.message.size() <= 1000 &&
+             data.read is bool &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.createdAt is timestamp &&
+             data.type is string && data.type.size() > 0 && data.type.size() <= 60 &&
+             (!('referenceId' in data) || (data.referenceId is string && data.referenceId.size() <= 100)) &&
+             (!('referenceType' in data) || (data.referenceType is string && data.referenceType.size() <= 50));
+    }
+
+    function isValidTeamMember(data) {
+      let requiredFields = ['name', 'role', 'email', 'userId', 'createdAt'];
+      let allowedFields = ['name', 'role', 'email', 'phone', 'userId', 'createdAt'];
+      
+      return hasRequiredFields(requiredFields) &&
+             hasOnlyAllowedFields(allowedFields) &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 200 &&
+             data.role in ["Writer", "Editor", "Quality Checker"] &&
+             isValidEmail(data.email) &&
+             (!('phone' in data) || (data.phone is string && data.phone.size() <= 30)) &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidAssignmentLog(data) {
+      let requiredFields = ['jobId', 'jobCode', 'role', 'previousAssigneeName', 'newAssigneeName', 'userId', 'createdAt'];
+      let allowedFields = ['jobId', 'jobCode', 'role', 'previousAssigneeName', 'newAssigneeName', 'userId', 'createdAt'];
+      
+      return hasRequiredFields(requiredFields) &&
+             hasOnlyAllowedFields(allowedFields) &&
+             data.jobId is string && data.jobId.size() > 0 &&
+             data.jobCode is string &&
+             data.role in ["Writer", "Editor", "Quality Checker"] &&
+             data.previousAssigneeName is string &&
+             data.newAssigneeName is string &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidJobActivity(data) {
+      let requiredFields = ['jobId', 'action', 'userName', 'userEmail', 'userId', 'createdAt'];
+      let allowedFields = ['jobId', 'action', 'userName', 'userEmail', 'userId', 'createdAt'];
+      
+      return hasRequiredFields(requiredFields) &&
+             hasOnlyAllowedFields(allowedFields) &&
+             data.jobId is string && data.jobId.size() > 0 &&
+             data.action is string && data.action.size() > 0 &&
+             data.userName is string &&
+             data.userEmail is string &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidJobFile(data) {
+      let requiredFields = ['jobId', 'fileName', 'category', 'fileType', 'fileSize', 'fileData', 'uploadedBy', 'userId', 'createdAt'];
+      let allowedFields = ['jobId', 'fileName', 'category', 'fileType', 'fileSize', 'fileData', 'uploadedBy', 'userId', 'createdAt'];
+      
+      return hasRequiredFields(requiredFields) &&
+             hasOnlyAllowedFields(allowedFields) &&
+             data.jobId is string && data.jobId.size() > 0 &&
+             data.fileName is string && data.fileName.size() > 0 && data.fileName.size() <= 256 &&
+             data.category in ["Requirements", "Source Materials", "Writer Draft", "QC Version", "Final Submission", "Invoice"] &&
+             data.fileType is string && data.fileType.size() <= 128 &&
+             data.fileSize is number && data.fileSize >= 0 &&
+             data.fileData is string && data.fileData.size() > 0 &&
+             data.uploadedBy is string && data.uploadedBy.size() <= 200 &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidWhatsAppTemplate(data) {
+      let requiredFields = ['clientTemplate', 'writerTemplate', 'userId'];
+      let allowedFields = ['clientTemplate', 'writerTemplate', 'userId', 'updatedAt'];
+      
+      return hasRequiredFields(requiredFields) &&
+             hasOnlyAllowedFields(allowedFields) &&
+             data.clientTemplate is string && data.clientTemplate.size() <= 2000 &&
+             data.writerTemplate is string && data.writerTemplate.size() <= 2000 &&
+             data.userId is string && data.userId == request.auth.uid &&
+             (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    function isValidCommunication(data) {
+      let requiredFields = ['jobId', 'jobCode', 'recipientRole', 'recipientName', 'recipientPhone', 'message', 'status', 'userId', 'createdAt'];
+      let allowedFields = ['jobId', 'jobCode', 'recipientRole', 'recipientName', 'recipientPhone', 'message', 'status', 'userId', 'createdAt'];
+      
+      return hasRequiredFields(requiredFields) &&
+             hasOnlyAllowedFields(allowedFields) &&
+             data.jobId is string && data.jobId.size() > 0 &&
+             data.jobCode is string && data.jobCode.size() > 0 &&
+             data.recipientRole in ["Client", "Writer"] &&
+             data.recipientName is string && data.recipientName.size() <= 200 &&
+             data.recipientPhone is string && data.recipientPhone.size() <= 30 &&
+             data.message is string && data.message.size() <= 4000 &&
+             data.status is string && data.status.size() <= 100 &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidRevision(data) {
+      let requiredFields = ['jobId', 'revisionNumber', 'requestedDate', 'requestedBy', 'revisionNotes', 'status', 'userId', 'createdAt'];
+      let allowedFields = ['jobId', 'revisionNumber', 'requestedDate', 'requestedBy', 'revisionNotes', 'completionDate', 'status', 'userId', 'createdAt'];
+      
+      return hasRequiredFields(requiredFields) &&
+             hasOnlyAllowedFields(allowedFields) &&
+             data.jobId is string && data.jobId.size() > 0 &&
+             data.revisionNumber is number && data.revisionNumber >= 0 &&
+             data.requestedDate is string && data.requestedDate.size() <= 100 &&
+             data.requestedBy is string && data.requestedBy.size() <= 200 &&
+             data.revisionNotes is string && data.revisionNotes.size() <= 4000 &&
+             (!('completionDate' in data) || data.completionDate is string || data.completionDate == null) &&
+             data.status in ["Pending", "In Progress", "Completed"] &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.createdAt is timestamp;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /jobs/{jobId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidJob(request.resource.data);
+      allow update: if isAuthenticated() && isDocOwner() && isValidJob(request.resource.data) && 
+                    request.resource.data.userId == resource.data.userId &&
+                    request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isAuthenticated() && (isDocOwner() || isAdmin());
+    }
+
+    match /clients/{clientId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidClient(request.resource.data);
+      allow update: if isAuthenticated() && isDocOwner() && isValidClient(request.resource.data) && 
+                    request.resource.data.userId == resource.data.userId &&
+                    request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isAuthenticated() && (isDocOwner() || isAdmin());
+    }
+
+    match /invoices/{invoiceId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidInvoice(request.resource.data);
+      allow update: if isAuthenticated() && isDocOwner() && isValidInvoice(request.resource.data) && 
+                    request.resource.data.userId == resource.data.userId &&
+                    request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isAuthenticated() && (isDocOwner() || isAdmin());
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidNotification(request.resource.data);
+      allow update: if isAuthenticated() && isDocOwner() && isValidNotification(request.resource.data) && 
+                    request.resource.data.userId == resource.data.userId &&
+                    request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isAuthenticated() && (isDocOwner() || isAdmin());
+    }
+
+    match /team_members/{memberId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidTeamMember(request.resource.data);
+      allow update: if isAuthenticated() && isDocOwner() && isValidTeamMember(request.resource.data) && 
+                    request.resource.data.userId == resource.data.userId &&
+                    request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isAuthenticated() && (isDocOwner() || isAdmin());
+    }
+
+    match /assignment_logs/{logId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidAssignmentLog(request.resource.data);
+      allow update: if false; // Audit logs should remain immutable
+      allow delete: if isAuthenticated() && (isDocOwner() || isAdmin());
+    }
+
+    match /job_activities/{activityId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidJobActivity(request.resource.data);
+      allow update: if false; // Timeline activities should remain immutable
+      allow delete: if isAuthenticated() && (isDocOwner() || isAdmin());
+    }
+
+    match /job_files/{fileId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidJobFile(request.resource.data);
+      allow update: if false; // Uploaded files are immutable
+      allow delete: if isAuthenticated() && (isDocOwner() || isAdmin());
+    }
+
+    match /whatsapp_templates/{templateId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidWhatsAppTemplate(request.resource.data);
+      allow update: if isAuthenticated() && isDocOwner() && isValidWhatsAppTemplate(request.resource.data) &&
+                    request.resource.data.userId == resource.data.userId;
+      allow delete: if isAuthenticated() && (isDocOwner() || isAdmin());
+    }
+
+    match /communications/{commId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidCommunication(request.resource.data);
+      allow update: if false; // Communications history shouldn't end up modified
+      allow delete: if isAuthenticated() && (isDocOwner() || isAdmin());
+    }
+
+    match /revisions/{revisionId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidRevision(request.resource.data);
+      allow update: if isAuthenticated() && isDocOwner() && isValidRevision(request.resource.data) &&
+                    request.resource.data.userId == resource.data.userId &&
+                    request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isAuthenticated() && (isDocOwner() || isAdmin());
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (isOwner(userId) || isAdmin());
+      allow create: if isAuthenticated() && isOwner(userId) && 
+                    hasOnlyAllowedFields(['role', 'email', 'name']) &&
+                    request.resource.data.role == 'user';
+      allow update: if isAuthenticated() && (isOwner(userId) || isAdmin()) &&
+                    (!('role' in request.resource.data) || request.resource.data.role == resource.data.role || isAdmin());
+    }
+  }
+}

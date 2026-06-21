@@ -1,0 +1,195 @@
+@import "tailwindcss";
+
+@variant dark (&:where(.dark, .dark *));
+
+/* Set global modern transitions for fluid dark-light shifting */
+* {
+  transition-property: color, background-color, border-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
+
+/* Light Mode Defaults */
+:root {
+  --color-neutral-main: #F8F9FC;
+  --color-surface-bg: #ffffff;
+  --color-border-grey: #e2e8f0;
+  --text-primary: #0f172a;
+}
+
+/* Dark Mode Variables mapped to optimize readability and combat eye-strain */
+html.dark {
+  color-scheme: dark;
+  --color-neutral-main: #090d16; /* Eye-safe obsidian space pitch */
+  --color-surface-bg: #121824; /* Rich navy-grey canvas for cards */
+  --color-border-grey: #1e293b; /* Subtle cosmic seam */
+  --text-primary: #f8fafc; /* Crisp silver white */
+}
+
+/* Body and root adaptation rules */
+html.dark body {
+  background-color: var(--color-neutral-main) !important;
+  color: var(--text-primary) !important;
+}
+
+html.dark .min-h-screen {
+  background-color: var(--color-neutral-main) !important;
+}
+
+/* Smooth background overrides for major modules */
+html.dark nav,
+html.dark .sticky {
+  background-color: #0b0f19 !important;
+  border-color: var(--color-border-grey) !important;
+}
+
+html.dark .bg-white {
+  background-color: var(--color-surface-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--color-border-grey) !important;
+}
+
+html.dark .bg-gray-50,
+html.dark .bg-slate-50,
+html.dark .bg-gray-50\/50,
+html.dark .bg-[#F8F9FC] {
+  background-color: var(--color-neutral-main) !important;
+}
+
+html.dark .bg-gray-100,
+html.dark .bg-gray-100\/80 {
+  background-color: #1a2333 !important;
+}
+
+html.dark .bg-gray-100\/80 button {
+  color: #94a3b8;
+}
+
+html.dark .bg-gray-100\/80 button.bg-white {
+  background-color: #121824 !important;
+  color: #818cf8 !important;
+}
+
+/* Borders */
+html.dark .border,
+html.dark .border-gray-200,
+html.dark .border-gray-100,
+html.dark .border-slate-100,
+html.dark .border-slate-200 {
+  border-color: var(--color-border-grey) !important;
+}
+
+/* Standard Typography Dark Tones */
+html.dark .text-gray-950,
+html.dark .text-gray-900,
+html.dark .text-slate-900,
+html.dark .text-slate-800,
+html.dark .text-gray-800,
+html.dark h1,
+html.dark h2,
+html.dark h3,
+html.dark h4 {
+  color: var(--text-primary) !important;
+}
+
+html.dark .text-gray-700,
+html.dark .text-slate-700,
+html.dark .text-gray-650,
+html.dark .text-gray-600 {
+  color: #cbd5e1 !important;
+}
+
+html.dark .text-gray-500,
+html.dark .text-gray-400,
+html.dark .text-gray-450,
+html.dark .text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+/* Forms & Active select, inputs overlays */
+html.dark input,
+html.dark select,
+html.dark textarea {
+  background-color: #121824 !important;
+  border-color: #1e293b !important;
+  color: #f8fafc !important;
+}
+
+html.dark input:focus,
+html.dark select:focus,
+html.dark textarea:focus {
+  border-color: #6366f1 !important;
+  outline: none;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #475569 !important;
+}
+
+/* Notification Popups, Drawers, and Dialog Backdrops */
+html.dark .bg-slate-900\/40,
+html.dark .bg-black\/60 {
+  background-color: rgba(2, 6, 17, 0.7) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+html.dark .bg-white.rounded-3xl {
+  background-color: #0e131f !important;
+  border-color: #1e293b !important;
+}
+
+html.dark .divide-gray-150 > * + *,
+html.dark .divide-gray-100 > * + * {
+  border-color: #1e293b !important;
+}
+
+/* Button & Card Hover variations to retain modern tactile feel */
+html.dark .hover\:bg-slate-50:hover,
+html.dark .hover\:bg-gray-50:hover,
+html.dark .hover\:bg-slate-50\/70:hover {
+  background-color: #1e293d !important;
+}
+
+/* Badge highlights colors correction */
+html.dark .bg-indigo-50,
+html.dark .bg-indigo-55,
+html.dark .bg-indigo-50\/50,
+html.dark .bg-indigo-600\/10 {
+  background-color: rgba(99, 102, 241, 0.15) !important;
+}
+
+html.dark .text-indigo-600,
+html.dark .text-indigo-650 {
+  color: #818cf8 !important;
+}
+
+html.dark .text-indigo-700 {
+  color: #a5b4fc !important;
+}
+
+/* Custom Scrollbars in Dark Mode */
+html.dark ::-webkit-scrollbar-track {
+  background: var(--color-neutral-main);
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: var(--color-border-grey);
+}
+
+/* Recharts charts elements adaptability inside dark grids */
+html.dark .recharts-default-tooltip {
+  background-color: #0e131f !important;
+  border-color: #1e293b !important;
+  color: #f8fafc !important;
+}
+
+html.dark .recharts-cartesian-grid-horizontal line,
+html.dark .recharts-cartesian-grid-vertical line {
+  stroke: #1e293b !important;
+}
+
+html.dark .recharts-legend-item-text {
+  color: #94a3b8 !important;
+}
+

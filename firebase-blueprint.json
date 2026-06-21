@@ -1,0 +1,600 @@
+{
+  "entities": {
+    "Job": {
+      "title": "Job",
+      "description": "A work job or assignment.",
+      "type": "object",
+      "properties": {
+        "clientCode": {
+          "type": "string",
+          "description": "Unique code for the client."
+        },
+        "jobName": {
+          "type": "string",
+          "description": "Mandatory name describing the job."
+        },
+        "jobCode": {
+          "type": "string",
+          "description": "Mandatory unique code/reference for the job."
+        },
+        "wordCount": {
+          "type": "number",
+          "description": "Number of words in the assignment."
+        },
+        "rate": {
+          "type": "number",
+          "description": "Rate per word or flat rate."
+        },
+        "deadline": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Deadline for the job."
+        },
+        "revenue": {
+          "type": "number",
+          "description": "Total revenue from the job."
+        },
+        "writerCost": {
+          "type": "number",
+          "description": "SLA or direct cost paid to the writer."
+        },
+        "editorCost": {
+          "type": "number",
+          "description": "SLA or direct cost paid to the editor."
+        },
+        "qcCost": {
+          "type": "number",
+          "description": "SLA or direct cost paid to the quality checker."
+        },
+        "otherExpenses": {
+          "type": "number",
+          "description": "Any additional overhead or expenses."
+        },
+        "revisionCount": {
+          "type": "number",
+          "description": "The count of revisions for this job."
+        },
+        "completedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The ISO 8601 string of when the job was completed."
+        },
+        "startDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Start Date of the job."
+        },
+        "internalDeadline": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Internal Deadline of the job."
+        },
+        "clientDeadline": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Client Deadline of the job."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional notes for the job."
+        },
+        "useChecklist": {
+          "type": "boolean",
+          "description": "Whether the job uses an optional checklist."
+        },
+        "checklist": {
+          "type": "array",
+          "description": "Array of checklist items containing id, text, and completed status."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Todo", "In Progress", "Review", "Completed"],
+          "description": "Current status of the job."
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID of the user who owns the job."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the job was created."
+        }
+      },
+      "required": ["clientCode", "jobName", "jobCode", "wordCount", "rate", "deadline", "status", "userId", "createdAt"]
+    },
+    "Client": {
+      "title": "Client",
+      "description": "A client record.",
+      "type": "object",
+      "properties": {
+        "clientName": {
+          "type": "string",
+          "description": "Full name of the client."
+        },
+        "clientCode": {
+          "type": "string",
+          "description": "Unique shorthand code utilized to link with jobs."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the client."
+        },
+        "phone": {
+          "type": "string",
+          "description": "Phone number of the client."
+        },
+        "country": {
+          "type": "string",
+          "description": "Country of the client."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Optional notes or details for the client."
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID of the user who owns the client."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the client was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the client was updated."
+        }
+      },
+      "required": ["clientName", "clientCode", "email", "phone", "country", "userId", "createdAt"]
+    },
+    "Invoice": {
+      "title": "Invoice",
+      "description": "An invoice for billing client jobs.",
+      "type": "object",
+      "properties": {
+        "invoiceNumber": {
+          "type": "string",
+          "description": "Unique identifier for the invoice."
+        },
+        "jobCode": {
+          "type": "string",
+          "description": "The job code associated with this invoice."
+        },
+        "client": {
+          "type": "string",
+          "description": "Client code or client name."
+        },
+        "amount": {
+          "type": "number",
+          "description": "Total amount of the invoice."
+        },
+        "billingDate": {
+          "type": "string",
+          "format": "date",
+          "description": "Date when invoice was billed."
+        },
+        "dueDate": {
+          "type": "string",
+          "format": "date",
+          "description": "Due date of the invoice."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Draft", "Sent", "Paid", "Overdue", "Cancelled", "Pending"],
+          "description": "Current payment status of the invoice."
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID of the user who owns the invoice."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the invoice was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the invoice was updated."
+        },
+        "companyName": {
+          "type": "string",
+          "description": "Custom Company/Agency name shown on the invoice."
+        },
+        "billingMethod": {
+          "type": "string",
+          "enum": ["manual", "qty_rate", "pages"],
+          "description": "The pricing model used for auto-calculation."
+        },
+        "quantity": {
+          "type": "number",
+          "description": "Used with Quantity x Rate pricing mode."
+        },
+        "rate": {
+          "type": "number",
+          "description": "Used with Quantity x Rate pricing mode."
+        },
+        "pages": {
+          "type": "integer",
+          "description": "Used with page-based pricing mode."
+        },
+        "unitLabel": {
+          "type": "string",
+          "description": "E.g. Words, Assignments, Articles."
+        },
+        "taxPercentage": {
+          "type": "number",
+          "description": "Optional tax percentage applied (e.g. 18 for 18%)."
+        },
+        "discountAmount": {
+          "type": "number",
+          "description": "Optional flat discount amount (in INR)."
+        },
+        "jobId": {
+          "type": "string",
+          "description": "The exact ID of the job in Firestore linked to this invoice."
+        }
+      },
+      "required": ["invoiceNumber", "jobCode", "client", "amount", "billingDate", "dueDate", "status", "userId", "createdAt"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "System-generated or trigger-based user notifications.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Short heading of the notification."
+        },
+        "message": {
+          "type": "string",
+          "description": "Explanatory full text of the alert."
+        },
+        "read": {
+          "type": "boolean",
+          "description": "Whether the notification is registered as read."
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID of the user who owns the notification."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the notification was created."
+        },
+        "type": {
+          "type": "string",
+          "description": "Categorization key for notification type, e.g. job_due_24h, payment_overdue, new_job, checklist_incomplete."
+        },
+        "referenceId": {
+          "type": "string",
+          "description": "Associated document identifier, e.g. job id, invoice id."
+        },
+        "referenceType": {
+          "type": "string",
+          "description": "Resource identifier type, e.g. job, invoice."
+        }
+      },
+      "required": ["title", "message", "read", "userId", "createdAt", "type"]
+    },
+    "TeamMember": {
+      "title": "TeamMember",
+      "description": "Pool of freelance team members that can be assigned to jobs.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Full name of the team member."
+        },
+        "role": {
+          "type": "string",
+          "enum": ["Writer", "Editor", "Quality Checker"],
+          "description": "Designated core skillset or role of the team member."
+        },
+        "email": {
+          "type": "string",
+          "description": "Main email contact of the team member."
+        },
+        "phone": {
+          "type": "string",
+          "description": "Phone number/WhatsApp of the team member."
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID of the user who owns/created this team member contact."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when this team member was created."
+        }
+      },
+      "required": ["name", "role", "email", "userId", "createdAt"]
+    },
+    "WhatsAppTemplate": {
+      "title": "WhatsAppTemplate",
+      "description": "Customizable WhatsApp communication message templates.",
+      "type": "object",
+      "properties": {
+        "clientTemplate": {
+          "type": "string",
+          "description": "The customizable template string for contacting the client."
+        },
+        "writerTemplate": {
+          "type": "string",
+          "description": "The customizable template string for contacting the writer."
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID of the user who owns this template."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when this template configuration was updated."
+        }
+      },
+      "required": ["clientTemplate", "writerTemplate", "userId"]
+    },
+    "Communication": {
+      "title": "Communication",
+      "description": "Logs of WhatsApp communication history.",
+      "type": "object",
+      "properties": {
+        "jobId": {
+          "type": "string",
+          "description": "Link to the targeted job ID."
+        },
+        "jobCode": {
+          "type": "string",
+          "description": "Shorthand tracking code of the job."
+        },
+        "recipientRole": {
+          "type": "string",
+          "enum": ["Client", "Writer"],
+          "description": "Role of the communication recipient."
+        },
+        "recipientName": {
+          "type": "string",
+          "description": "Name of the communication recipient."
+        },
+        "recipientPhone": {
+          "type": "string",
+          "description": "Raw phone number used."
+        },
+        "message": {
+          "type": "string",
+          "description": "The finalized string message sent."
+        },
+        "status": {
+          "type": "string",
+          "description": "Result status, usually 'Sent'."
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID of the owner who initiated the activity."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when this log was written."
+        }
+      },
+      "required": ["jobId", "jobCode", "recipientRole", "recipientName", "recipientPhone", "message", "status", "userId", "createdAt"]
+    },
+    "AssignmentLog": {
+      "title": "AssignmentLog",
+      "description": "Historic audit of assignments when a team member is assigned or changed.",
+      "type": "object",
+      "properties": {
+        "jobId": {
+          "type": "string",
+          "description": "ID of the associated job document."
+        },
+        "jobCode": {
+          "type": "string",
+          "description": "Shorthand tracking code of the job."
+        },
+        "role": {
+          "type": "string",
+          "enum": ["Writer", "Editor", "Quality Checker"],
+          "description": "The specific assignment seat (Writer, Editor, or QC)."
+        },
+        "previousAssigneeName": {
+          "type": "string",
+          "description": "Name of previous team member assigned (or 'None')."
+        },
+        "newAssigneeName": {
+          "type": "string",
+          "description": "Name of new team member assigned (or 'None')."
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID of the workspace owner who performed this transaction."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the assignment change occurred."
+        }
+      },
+      "required": ["jobId", "jobCode", "role", "previousAssigneeName", "newAssigneeName", "userId", "createdAt"]
+    },
+    "JobActivity": {
+      "title": "JobActivity",
+      "description": "An activity log entry for a specific job.",
+      "type": "object",
+      "properties": {
+        "jobId": {
+          "type": "string",
+          "description": "ID of the associated job document."
+        },
+        "action": {
+          "type": "string",
+          "description": "The action performed, e.g. Job Created, Writer Assigned."
+        },
+        "userName": {
+          "type": "string",
+          "description": "Display name of the user who performed the action."
+        },
+        "userEmail": {
+          "type": "string",
+          "description": "Email address of the user who performed the action."
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID of the owner who initiated the activity."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when this activity log entry occurred."
+        }
+      },
+      "required": ["jobId", "action", "userName", "userEmail", "userId", "createdAt"]
+    },
+    "JobFile": {
+      "title": "JobFile",
+      "description": "A file uploaded to a job repository.",
+      "type": "object",
+      "properties": {
+        "jobId": {
+          "type": "string",
+          "description": "ID of the associated job document."
+        },
+        "fileName": {
+          "type": "string",
+          "description": "The original name of the file."
+        },
+        "category": {
+          "type": "string",
+          "enum": ["Requirements", "Source Materials", "Writer Draft", "QC Version", "Final Submission", "Invoice"],
+          "description": "The category of the file."
+        },
+        "fileType": {
+          "type": "string",
+          "description": "MIME type of the file."
+        },
+        "fileSize": {
+          "type": "number",
+          "description": "Size of the file in bytes."
+        },
+        "fileData": {
+          "type": "string",
+          "description": "Base64 data URI of the file content for real-time preview and download."
+        },
+        "uploadedBy": {
+          "type": "string",
+          "description": "Full name or email of the person who uploaded the file."
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID of the user who owns or uploaded this file."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the file was uploaded."
+        }
+      },
+      "required": ["jobId", "fileName", "category", "fileType", "fileSize", "fileData", "uploadedBy", "userId", "createdAt"]
+    },
+    "Revision": {
+      "title": "Revision",
+      "description": "A contract revision record associated with a job.",
+      "type": "object",
+      "properties": {
+        "jobId": {
+          "type": "string",
+          "description": "ID of the associated job document."
+        },
+        "revisionNumber": {
+          "type": "number",
+          "description": "Shorthand tracking count of revision sequence."
+        },
+        "requestedDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO timestamp for when the revision request was lodged."
+        },
+        "requestedBy": {
+          "type": "string",
+          "description": "Name of the entity requesting the revision."
+        },
+        "revisionNotes": {
+          "type": "string",
+          "description": "Instructional notes or brief explaining the revision requirements."
+        },
+        "completionDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO timestamp for when the revision task was set completed."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Pending", "In Progress", "Completed"],
+          "description": "State status of the revision."
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID of the owner who initiated/recorded the revision request."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when this record was logged."
+        }
+      },
+      "required": ["jobId", "revisionNumber", "requestedDate", "requestedBy", "revisionNotes", "status", "userId", "createdAt"]
+    }
+  },
+  "firestore": {
+    "jobs": {
+      "schema": "Job",
+      "description": "Collection of work jobs."
+    },
+    "clients": {
+      "schema": "Client",
+      "description": "Collection of client contacts."
+    },
+    "invoices": {
+      "schema": "Invoice",
+      "description": "Collection of client invoices."
+    },
+    "notifications": {
+      "schema": "Notification",
+      "description": "Collection of user notifications."
+    },
+    "team_members": {
+      "schema": "TeamMember",
+      "description": "Collection of available candidates for hire assignments."
+    },
+    "assignment_logs": {
+      "schema": "AssignmentLog",
+      "description": "Collection of transaction logs audit."
+    },
+    "job_activities": {
+      "schema": "JobActivity",
+      "description": "Collection of job activity logs."
+    },
+    "job_files": {
+      "schema": "JobFile",
+      "description": "Collection of uploaded job files."
+    },
+    "whatsapp_templates": {
+      "schema": "WhatsAppTemplate",
+      "description": "Collection of custom WhatsApp communication templates."
+    },
+    "communications": {
+      "schema": "Communication",
+      "description": "Log records tracking WhatsApp messages sent to writers and clients."
+    },
+    "revisions": {
+      "schema": "Revision",
+      "description": "Log records tracking job revisions requested by client/others."
+    }
+  }
+}

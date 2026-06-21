@@ -1,0 +1,6 @@
+{
+  "name": "WorkFlow Tracker",
+  "description": "A personal work tracker with Kanban board and dashboard for freelance writers and editors.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
