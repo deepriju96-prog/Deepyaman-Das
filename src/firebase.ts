@@ -1,5 +1,13 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
+import { 
+  getAuth, 
+  GoogleAuthProvider, 
+  signInWithPopup, 
+  signOut, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signInAnonymously 
+} from "firebase/auth";
 import { initializeFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, where, onSnapshot, orderBy, Timestamp, getDocFromServer } from "firebase/firestore";
 import firebaseConfig from "../firebase-applet-config.json";
 
@@ -13,6 +21,9 @@ export const googleProvider = new GoogleAuthProvider();
 
 // Auth functions
 export const signInWithGoogle = () => signInWithPopup(auth, googleProvider);
+export const loginWithEmail = (email: string, pass: string) => signInWithEmailAndPassword(auth, email, pass);
+export const registerWithEmail = (email: string, pass: string) => createUserWithEmailAndPassword(auth, email, pass);
+export const loginAsGuest = () => signInAnonymously(auth);
 export const logout = () => signOut(auth);
 
 // Error handling helper
@@ -69,12 +80,15 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
 
 // Connection test
 async function testConnection() {
-  try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
-  } catch (error) {
-    if(error instanceof Error && error.message.includes('the client is offline')) {
-      console.error("Please check your Firebase configuration. ");
+  setTimeout(async () => {
+    try {
+      await getDocFromServer(doc(db, 'test', 'connection'));
+    } catch (error) {
+      console.log("Firebase connection test details:", error);
+      if (error instanceof Error && error.message.toLowerCase().includes('the client is offline')) {
+        console.warn("Please check your Firebase configuration.");
+      }
     }
-  }
+  }, 3000);
 }
 testConnection();

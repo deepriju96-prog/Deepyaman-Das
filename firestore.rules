@@ -204,7 +204,7 @@ service cloud.firestore {
 
     function isValidJobFile(data) {
       let requiredFields = ['jobId', 'fileName', 'category', 'fileType', 'fileSize', 'fileData', 'uploadedBy', 'userId', 'createdAt'];
-      let allowedFields = ['jobId', 'fileName', 'category', 'fileType', 'fileSize', 'fileData', 'uploadedBy', 'userId', 'createdAt'];
+      let allowedFields = ['jobId', 'fileName', 'category', 'fileType', 'fileSize', 'fileData', 'uploadedBy', 'userId', 'createdAt', 'driveFileId', 'driveFileUrl'];
       
       return hasRequiredFields(requiredFields) &&
              hasOnlyAllowedFields(allowedFields) &&
@@ -216,7 +216,9 @@ service cloud.firestore {
              data.fileData is string && data.fileData.size() > 0 &&
              data.uploadedBy is string && data.uploadedBy.size() <= 200 &&
              data.userId is string && data.userId == request.auth.uid &&
-             data.createdAt is timestamp;
+             data.createdAt is timestamp &&
+             (!('driveFileId' in data) || (data.driveFileId is string || data.driveFileId == null)) &&
+             (!('driveFileUrl' in data) || (data.driveFileUrl is string || data.driveFileUrl == null));
     }
 
     function isValidWhatsAppTemplate(data) {
